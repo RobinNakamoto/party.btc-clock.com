@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>BTC Party Radio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+    #player {
+      width: 90%;
+      max-width: 400px;
+    }
+    #msg {
+      position: absolute;
+      bottom: 20px;
+      color: #aaa;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <audio id="player" controls autoplay playsinline></audio>
+  <div id="msg">BTC Party Radio — playing live…</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
+  <script>
+    // ---- CONFIG ----
+    const RAW_M3U8 = "https://prod-fastly-eu-west-1.video.pscp.tv/Transcoding/v1/hls/tz2CDsPMsHb-H_P_98-V8e87QFwfOcyKz-DOiSFYJbsid08YlfrKX4FjFpJp3PeRwGUipiQ8XqDLc3w4Si_-7g/non_transcode/eu-west-1/periscope-replay-direct-prod-eu-west-1-public/master_dynamic_playlist.m3u8?type=live";
+    const WORKER_BASE = "https://twilight-dust-7cd4.robin-f5c.workers.dev";
+    const PROXIED_URL = `${WORKER_BASE}/?u=${encodeURIComponent(RAW_M3U8)}`;
+
+    const audio = document.getElementById("player");
+    const msg = document.getElementById("msg");
+
+    function note(s) {
+      console.log(s);
+      msg.textContent = s;
+    }
+
+    function start(url) {
+      audio.muted = true; // required for autoplay in most browsers
+      audio.autoplay = true;
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(audio);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          const p = audio.play();
+          if (p && p.catch) p.catch(() => {
+            note("Click anywhere to start playback");
+          });
+        });
+      } else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
+        // Safari & iOS: can play HLS natively
+        audio.src = url;
+        audio.play().catch(() => {
+          note("Tap to start audio");
+        });
+      } else {
+        note("Your browser does not support HLS audio.");
+      }
+    }
+
+    // First click will unmute audio (needed in Safari/Chrome autoplay policies)
+    window.addEventListener("click", () => {
+      audio.muted = false;
+      audio.play().catch(()=>{});
+    }, { once:true });
+
+    start(PROXIED_URL);
+  </script>
+</body>
+</html>
