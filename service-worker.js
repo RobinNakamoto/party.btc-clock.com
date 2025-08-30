@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2"; // Updated from v1 to v2
 const CACHE_NAME = "btc-clock-" + CACHE_VERSION;
 
 const PRECACHE = [
