@@ -45,29 +45,36 @@
     <video id="v" muted playsinline autoplay controls></video>
   </div>
   <div id="msg"></div>
-
   <!-- hls.js for browsers without native HLS (Chrome/Firefox/etc.) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
   <script>
+    // Window resizing for standalone mode (Safari Web App)
+    window.addEventListener('load', () => {
+      if (window.navigator.standalone === true) {
+        const width = 1200;
+        const height = 600;
+        window.resizeTo(width, height);
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+        window.moveTo(left, top);
+      }
+    });
+
     // ---- CONFIG ----
     const RAW_M3U8 = "https://prod-fastly-eu-west-1.video.pscp.tv/Transcoding/v1/hls/tz2CDsPMsHb-H_P_98-V8e87QFwfOcyKz-DOiSFYJbsid08YlfrKX4FjFpJp3PeRwGUipiQ8XqDLc3w4Si_-7g/non_transcode/eu-west-1/periscope-replay-direct-prod-eu-west-1-public/master_dynamic_playlist.m3u8?type=live";
     const WORKER_BASE = "https://twilight-dust-7cd4.robin-f5c.workers.dev";
     const PLAYLIST_URL = `${WORKER_BASE}/?u=${encodeURIComponent(RAW_M3U8)}`;
-
     const video = document.getElementById("v");
     const msg = document.getElementById("msg");
-
     function note(s) {
       console.log(s);
       msg.textContent = s;
       msg.style.display = "block";
     }
-
     async function start() {
       // Helpful for autoplay on some browsers
       video.muted = true;
       video.playsInline = true;
-
       if (window.Hls && Hls.isSupported()) {
         const hls = new Hls({
           liveSyncDurationCount: 3,
@@ -90,14 +97,12 @@
       } else {
         note("Your browser doesn't support HLS playback.");
       }
-
       // Surface media errors
       video.addEventListener("error", () => {
         const e = video.error;
         if (e) note(`HTMLMediaError code ${e.code}`);
       });
     }
-
     start();
   </script>
 </body>
